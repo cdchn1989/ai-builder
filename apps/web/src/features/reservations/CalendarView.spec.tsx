@@ -51,7 +51,8 @@ describe('CalendarView', () => {
     api();
     setup();
     await screen.findByText('Planeación semanal');
-    fireEvent.click(screen.getByRole('button', { name: 'Mover' }));
+    fireEvent.click(screen.getByRole('button', { name: /acciones de/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Mover' }));
     expect(screen.getByRole('heading', { name: /mover reserva/i })).toBeTruthy();
   });
 
@@ -59,7 +60,8 @@ describe('CalendarView', () => {
     const fetchMock = api((url, init) => (init.method === 'DELETE' ? { body: reservation({ status: 'CANCELLED' }) } : undefined));
     setup();
     await screen.findByText('Planeación semanal');
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(screen.getByRole('button', { name: /acciones de/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Cancelar reserva' }));
     await waitFor(() => expect(fetchMock.mock.calls.some((c) => (c[1] as RequestInit).method === 'DELETE')).toBe(true));
     const call = fetchMock.mock.calls.find((c) => (c[1] as RequestInit).method === 'DELETE')!;
     expect(call[0]).toBe('http://localhost:3000/api/v1/reservations/r-1');
@@ -70,7 +72,8 @@ describe('CalendarView', () => {
     api((url, init) => (init.method === 'DELETE' ? { status: 422, body: { error: { code: 'VALIDATION', message: 'Faltan menos de 30 minutos' } } } : undefined));
     setup();
     await screen.findByText('Planeación semanal');
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(screen.getByRole('button', { name: /acciones de/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Cancelar reserva' }));
     expect((await screen.findByRole('alert')).textContent).toBe('Faltan menos de 30 minutos');
   });
 });
