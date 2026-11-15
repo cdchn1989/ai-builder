@@ -1,0 +1,24 @@
+import { describe, expect, it } from 'vitest';
+import { createFakePrisma } from './fakePrisma';
+import { PrismaRoomRepository } from './PrismaRoomRepository';
+
+const room = { id: 'r1', name: 'Sala A', capacity: 8, equipment: 'TV', isActive: true };
+
+describe('PrismaRoomRepository', () => {
+  it('findById mapea a dominio y null si no existe', async () => {
+    const { client, rooms } = createFakePrisma();
+    rooms.push({ ...room, createdAt: new Date() });
+    const repo = new PrismaRoomRepository(client);
+    expect(await repo.findById('r1')).toEqual(room);
+    expect(await repo.findById('x')).toBeNull();
+  });
+
+  it('save hace upsert por id (crea y luego actualiza)', async () => {
+    const { client, rooms } = createFakePrisma();
+    const repo = new PrismaRoomRepository(client);
+    await repo.save(room);
+    await repo.save({ ...room, isActive: false, capacity: 10 });
+    expect(rooms).toHaveLength(1);
+    expect(rooms[0]).toMatchObject({ id: 'r1', isActive: false, capacity: 10 });
+  });
+});

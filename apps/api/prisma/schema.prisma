@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7: la URL de conexión vive en prisma.config.ts (no en el schema).
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  EMPLOYEE
+  HR
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  role         Role          @default(EMPLOYEE)
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+}
+
+model Room {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  capacity     Int
+  equipment    String
+  isActive     Boolean       @default(true)
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+}
+
+model Reservation {
+  id             String            @id @default(uuid())
+  roomId         String
+  room           Room              @relation(fields: [roomId], references: [id])
+  userId         String
+  user           User              @relation(fields: [userId], references: [id])
+  title          String
+  startTime      DateTime
+  endTime        DateTime
+  attendeesCount Int
+  status         ReservationStatus @default(CONFIRMED)
+  movedByHr      Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([roomId, startTime, endTime])
+}

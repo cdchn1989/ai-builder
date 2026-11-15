@@ -10,5 +10,6 @@ RUN npm ci
 COPY packages/shared packages/shared
 COPY apps/api apps/api
 WORKDIR /app/apps/api
+RUN npx prisma generate
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && npm start"]
