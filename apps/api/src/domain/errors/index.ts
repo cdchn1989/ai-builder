@@ -20,3 +20,8 @@ export class ForbiddenError extends DomainError {
 export class ValidationError extends DomainError {
   readonly code = 'VALIDATION';
 }
+
+/** Recurso inexistente (HTTP 404). */
+export class NotFoundError extends DomainError {
+  readonly code = 'NOT_FOUND';
+}
