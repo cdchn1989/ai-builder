@@ -1,7 +1,24 @@
+import { useAtomValue } from 'jotai';
+import { Header } from './features/auth-switcher/Header';
+import { UserGateModal } from './features/auth-switcher/UserGateModal';
+import { CalendarView } from './features/reservations/CalendarView';
+import { RoomsAdminView } from './features/rooms/RoomsAdminView';
+import { useWebSocketSync } from './shared/api/useWebSocketSync';
+import { WS_URL } from './shared/api/client';
+import { activeTabAtom, currentUserAtom } from './shared/store/atoms';
+
 export function App() {
+  const user = useAtomValue(currentUserAtom);
+  const tab = useAtomValue(activeTabAtom);
+  const connected = useWebSocketSync(WS_URL);
+
   return (
-    <main style={{ padding: '1rem', color: '#1E3A8A' }}>
-      <h1>Reservas de Salas</h1>
-    </main>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
+      <Header connected={connected} />
+      <main>
+        {!user && <UserGateModal />}
+        {user && (tab === 'rooms' && user.role === 'HR' ? <RoomsAdminView /> : <CalendarView />)}
+      </main>
+    </div>
   );
 }
