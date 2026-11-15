@@ -1,10 +1,9 @@
 # Sesiones de trabajo
 
-Resumen de las sesiones de Claude Code que construyeron el proyecto, una por tarea, siguiendo `02-backlog.md`:
+Exportación de las transcripciones crudas (`.jsonl`) de Claude Code, una sesión por tarea, en orden cronológico (2026-11-14). La sesión de T-08 se exportó antes de finalizar su último intercambio.
 
-| Tarea | Resultado | Reporte |
+| Archivo | Tarea | Reporte |
 |---|---|---|
-| T-01 … T-07 | Ver `docs/03-bitacora.md` | `docs/tareas/T-0X.md` |
-| T-08 | Verificación integral | `docs/tareas/T-08.md`, `docs/04-cierre.md` |
+| `T-01.*.jsonl` … `T-08.*.jsonl` | T-01 … T-08 | `docs/tareas/T-0X.md` |
 
-Las transcripciones crudas (`.jsonl`) no se versionan porque pueden contener rutas y datos personales del entorno local; el historial de commits atómicos (`feat(T-XX)`) y los reportes por tarea son el registro auditable.
+Anonimizadas: correo, nombre, usuario del sistema, rutas locales y usuario de GitHub reemplazados por marcadores genéricos.
