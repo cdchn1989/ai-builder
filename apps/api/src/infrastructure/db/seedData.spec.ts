@@ -11,6 +11,12 @@ describe('seedData', () => {
     }
   });
 
+  it('cada sala tiene un id UUID fijo y único (el seed no depende del nombre)', () => {
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+    for (const r of ROOMS_SEED) expect(r.id).toMatch(uuid);
+    expect(new Set(ROOMS_SEED.map((r) => r.id)).size).toBe(5);
+  });
+
   it('define 80 usuarios: 3 HR y 77 EMPLOYEE con emails únicos', () => {
     expect(USERS_SEED).toHaveLength(80);
     expect(USERS_SEED.filter((u) => u.role === 'HR')).toHaveLength(3);

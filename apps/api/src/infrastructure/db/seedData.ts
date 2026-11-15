@@ -1,11 +1,12 @@
 import type { Role } from '@reservas/shared';
 
+/** Ids UUID fijos: el seed identifica cada sala por id, no por nombre (HR puede renombrarlas). */
 export const ROOMS_SEED = [
-  { name: 'Sala Andes', capacity: 6, equipment: 'TV 55", pizarra' },
-  { name: 'Sala Pacífico', capacity: 10, equipment: 'Proyector, videoconferencia' },
-  { name: 'Sala Amazonas', capacity: 4, equipment: 'Pantalla, pizarra' },
-  { name: 'Sala Caribe', capacity: 14, equipment: 'Proyector, sistema de audio, videoconferencia' },
-  { name: 'Sala Patagonia', capacity: 20, equipment: 'Proyector, micrófonos, videoconferencia' },
+  { id: '0b6f3c1e-5a2d-4e8b-9c41-1a0000000001', name: 'Sala Andes', capacity: 6, equipment: 'TV 55", pizarra' },
+  { id: '0b6f3c1e-5a2d-4e8b-9c41-1a0000000002', name: 'Sala Pacífico', capacity: 10, equipment: 'Proyector, videoconferencia' },
+  { id: '0b6f3c1e-5a2d-4e8b-9c41-1a0000000003', name: 'Sala Amazonas', capacity: 4, equipment: 'Pantalla, pizarra' },
+  { id: '0b6f3c1e-5a2d-4e8b-9c41-1a0000000004', name: 'Sala Caribe', capacity: 14, equipment: 'Proyector, sistema de audio, videoconferencia' },
+  { id: '0b6f3c1e-5a2d-4e8b-9c41-1a0000000005', name: 'Sala Patagonia', capacity: 20, equipment: 'Proyector, micrófonos, videoconferencia' },
 ] as const;
 
 export interface UserSeed { name: string; email: string; role: Role }

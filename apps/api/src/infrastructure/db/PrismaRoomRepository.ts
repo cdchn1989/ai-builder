@@ -1,7 +1,11 @@
 import type { PrismaClient } from '@prisma/client';
 import type { Room } from '../../domain/entities';
+import { ConflictError } from '../../domain/errors';
 import type { RoomRepository } from '../../domain/ports';
 import { toRoom } from './mappers';
+
+/** Código Prisma de violación de restricción única (p. ej. `Room.name`). */
+const PRISMA_UNIQUE_VIOLATION = 'P2002';
 
 export class PrismaRoomRepository implements RoomRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -17,6 +21,13 @@ export class PrismaRoomRepository implements RoomRepository {
 
   async save(room: Room): Promise<void> {
     const { id, ...data } = room;
-    await this.prisma.room.upsert({ where: { id }, update: data, create: room });
+    try {
+      await this.prisma.room.upsert({ where: { id }, update: data, create: room });
+    } catch (err) {
+      if ((err as { code?: string })?.code === PRISMA_UNIQUE_VIOLATION) {
+        throw new ConflictError('Ya existe una sala con ese nombre');
+      }
+      throw err;
+    }
   }
 }

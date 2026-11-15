@@ -9,8 +9,15 @@ function fakeSeedClient() {
     rooms, users,
     client: {
       room: {
-        upsert: vi.fn(async ({ where, update, create }: any) => {
-          rooms.set(where.name, rooms.has(where.name) ? { ...rooms.get(where.name), ...update } : create);
+        // Postgres `ON CONFLICT DO NOTHING`: omite filas que choquen con id o name (ambos únicos).
+        createMany: vi.fn(async ({ data, skipDuplicates }: any) => {
+          expect(skipDuplicates).toBe(true);
+          let count = 0;
+          for (const r of data) {
+            const clash = [...rooms.values()].some((x) => x.id === r.id || x.name === r.name);
+            if (!clash) { rooms.set(r.id, { ...r }); count++; }
+          }
+          return { count };
         }),
       },
       user: {
@@ -26,10 +33,10 @@ function fakeSeedClient() {
 }
 
 describe('runSeed', () => {
-  it('inserta 5 salas (upsert) y 80 usuarios (createMany skipDuplicates)', async () => {
+  it('inserta 5 salas y 80 usuarios (createMany skipDuplicates)', async () => {
     const { client, rooms, users } = fakeSeedClient();
     await runSeed(client as any);
-    expect(client.room.upsert).toHaveBeenCalledTimes(ROOMS_SEED.length);
+    expect(client.room.createMany).toHaveBeenCalledTimes(1);
     expect(rooms.size).toBe(5);
     expect(users.size).toBe(80);
   });
@@ -43,9 +50,13 @@ describe('runSeed', () => {
     expect(second.usersCreated).toBe(0);
   });
 
-  it('el upsert de salas no pisa isActive/capacity editados por HR', async () => {
-    const { client } = fakeSeedClient();
+  it('no pisa ediciones de HR ni crea salas nuevas si HR renombra una sala', async () => {
+    const { client, rooms } = fakeSeedClient();
     await runSeed(client as any);
-    for (const call of client.room.upsert.mock.calls) expect(call[0].update).toEqual({});
+    const first = ROOMS_SEED[0]!;
+    rooms.set(first.id, { ...rooms.get(first.id), name: 'Sala Renombrada', capacity: 9, isActive: false });
+    await runSeed(client as any);
+    expect(rooms.size).toBe(5);
+    expect(rooms.get(first.id)).toMatchObject({ name: 'Sala Renombrada', capacity: 9, isActive: false });
   });
 });

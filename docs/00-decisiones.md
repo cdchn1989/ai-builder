@@ -52,3 +52,37 @@
 - **Contexto:** Garantizar calidad con TDD en 2 horas y reconstrucción rápida en Docker.
 - **Decisión:** Pruebas unitarias en **Vitest v5** para contratos compartidos, dominio/casos de uso (con repositorios *in-memory*) y componentes React (React Testing Library), descartando Playwright y suites pesadas de integración.
 - **Por qué:** Evita descargar binarios pesados de Chromium en Docker y mantiene `npm test` veloz y determinístico.
+
+---
+
+## Decisiones tomadas durante la implementación
+
+## D-11: Prisma 7 con `prisma.config.ts` y Driver Adapter `@prisma/adapter-pg` (T-05)
+- **Duda:** La spec original mostraba `url = env("DATABASE_URL")` en el `datasource`, pero Prisma 7 lo rechaza y exige un *driver adapter*.
+- **Decisión:** La URL, las migraciones y el comando de seed se declaran en `apps/api/prisma.config.ts`; el cliente se construye con `@prisma/adapter-pg` + `pg` en `infrastructure/db/createPrismaClient.ts`.
+- **Por qué:** Es la única forma soportada en Prisma 7 y deja el detalle del driver encapsulado en infraestructura (D-03). Se respeta la trampa de versión de `CLAUDE.md` (`^7.10.1`, nunca `@latest`).
+
+## D-12: Seed Idempotente por `id` Fijo de Sala con `createMany` + `skipDuplicates` (T-05, corregido en el cierre)
+- **Duda:** El primer seed hacía `upsert` de salas **por nombre**; si HR renombraba una sala, el siguiente arranque creaba una sexta sala.
+- **Decisión:** Cada sala del seed tiene un UUID fijo y se inserta con `room.createMany({ skipDuplicates: true })` (Postgres `ON CONFLICT DO NOTHING` sobre `id` y `name`). Los usuarios siguen con `createMany` + `skipDuplicates` por email.
+- **Por qué:** Idempotencia real ante reinicios y ediciones de HR, sin pisar cambios (`isActive`, `capacity`, `name`) y compatible con volúmenes que ya tenían las salas sembradas por nombre.
+
+## D-13: Zona Horaria de Negocio Fija UTC-6 (T-04, T-07)
+- **Duda:** La spec define "07:00 a 20:00" y "reservas del día" sin decir en qué zona horaria; el contenedor corre en UTC y cada navegador en la suya.
+- **Decisión:** Toda regla de calendario se evalúa en UTC-6 fijo (sin horario de verano), igual en la API y en la web. Las fechas viajan como ISO 8601 UTC.
+- **Por qué:** Single-tenant de una sola oficina (KISS); evita que la misma reserva sea válida o no según dónde corra el código. El offset es inyectable en `ReservationRules` para otras oficinas o tests.
+
+## D-14: Contrato de Errores HTTP y 401 de Identidad (T-06)
+- **Duda:** La spec listaba 403/409/422 pero no qué pasa sin `x-user-id`, con JSON inválido, con recursos inexistentes ni con fallos de concurrencia.
+- **Decisión:** Formato único `{ error: { code, message, details? } }`; `400` para Zod/JSON/`date` inválida, `401` sin identidad válida, `404` para recursos o rutas inexistentes, y los errores Prisma `P2034` (serialización) y `P2002` (nombre de sala duplicado) traducidos a `409` en los adaptadores.
+- **Por qué:** El frontend puede mostrar mensajes claros por código; los errores de infraestructura nunca salen como `500` genéricos.
+
+## D-15: Permisos y Salas Desactivadas en la UI (T-07)
+- **Duda:** Qué mostrar a cada rol y qué hacer con salas desactivadas que ya tienen reservas.
+- **Decisión:** `canModifyReservation` replica la regla del dominio solo como UX (la API decide). Las salas desactivadas se ocultan del calendario y del alta; al mover una reserva su sala actual se mantiene en el selector. `visibleRoomIdsAtom` es `string[] | null` (`null` = todas las activas).
+- **Por qué:** Evita botones que siempre fallan y efectos de inicialización al cargar las salas.
+
+## D-16: Menú ⋮ para Mover/Cancelar (T-07, addendum)
+- **Duda:** Los botones al pie del bloque se recortaban en reservas de 30 min (`overflow-hidden`).
+- **Decisión:** `ActionMenu` (tres puntos + overlay `role="menu"` con posición `fixed`) en la fila superior del bloque; franja de 3,5 rem por slot y columnas de 14 rem mínimo; badge compacto «HR» en bloques cortos. Cancelar no usa `confirm()` nativo.
+- **Por qué:** Acciones siempre accesibles sin romper la grilla y sin diálogos bloqueantes del navegador.

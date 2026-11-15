@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ConflictError } from '../../domain/errors';
 import { createFakePrisma } from './fakePrisma';
 import { PrismaRoomRepository } from './PrismaRoomRepository';
 
@@ -28,5 +29,17 @@ describe('PrismaRoomRepository', () => {
     expect(await new PrismaRoomRepository(client).findAll()).toEqual([
       { id: 'r1', name: 'A', capacity: 4, equipment: 'TV', isActive: true },
     ]);
+  });
+
+  it('save traduce el choque de nombre único (P2002) a ConflictError', async () => {
+    const { client } = createFakePrisma();
+    client.room.upsert.mockRejectedValueOnce(Object.assign(new Error('Unique constraint'), { code: 'P2002' }));
+    await expect(new PrismaRoomRepository(client).save(room)).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it('save relanza errores no relacionados con unicidad', async () => {
+    const { client } = createFakePrisma();
+    client.room.upsert.mockRejectedValueOnce(new Error('boom'));
+    await expect(new PrismaRoomRepository(client).save(room)).rejects.toThrow('boom');
   });
 });
