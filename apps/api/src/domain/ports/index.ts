@@ -3,15 +3,19 @@ import type { Reservation, Room, User } from '../entities';
 
 export interface UserRepository {
   findById(id: string): Promise<User | null>;
+  findAll(): Promise<User[]>;
 }
 
 export interface RoomRepository {
   findById(id: string): Promise<Room | null>;
+  findAll(): Promise<Room[]>;
   save(room: Room): Promise<void>;
 }
 
 export interface ReservationRepository {
   findById(id: string): Promise<Reservation | null>;
+  /** Reservas CONFIRMED cuyo inicio cae en [from, to). */
+  findConfirmedBetween(from: Date, to: Date): Promise<Reservation[]>;
   /** Reservas CONFIRMED de la sala que cumplen `newStart < existingEnd && newEnd > existingStart`. */
   findOverlapping(roomId: string, start: Date, end: Date, excludeId?: string): Promise<Reservation[]>;
   /**

@@ -1,11 +1,12 @@
 import { ConflictError } from '../../../domain/errors';
-import type { Reservation, Room } from '../../../domain/entities';
+import type { Reservation, Room, User } from '../../../domain/entities';
 import type {
   Clock,
   IdGenerator,
   NotificationPort,
   ReservationRepository,
   RoomRepository,
+  UserRepository,
 } from '../../../domain/ports';
 
 export class InMemoryReservationRepository implements ReservationRepository {
@@ -14,6 +15,10 @@ export class InMemoryReservationRepository implements ReservationRepository {
   async findById(id: string) {
     const r = this.items.get(id);
     return r ? { ...r } : null;
+  }
+
+  async findConfirmedBetween(from: Date, to: Date) {
+    return [...this.items.values()].filter((r) => r.status === 'CONFIRMED' && r.startTime >= from && r.startTime < to);
   }
 
   async findOverlapping(roomId: string, start: Date, end: Date, excludeId?: string) {
@@ -48,8 +53,22 @@ export class InMemoryRoomRepository implements RoomRepository {
     const r = this.items.get(id);
     return r ? { ...r } : null;
   }
+  async findAll() {
+    return [...this.items.values()].map((r) => ({ ...r }));
+  }
   async save(room: Room) {
     this.items.set(room.id, { ...room });
+  }
+}
+
+export class InMemoryUserRepository implements UserRepository {
+  readonly items = new Map<string, User>();
+  async findById(id: string) {
+    const u = this.items.get(id);
+    return u ? { ...u } : null;
+  }
+  async findAll() {
+    return [...this.items.values()].map((u) => ({ ...u }));
   }
 }
 

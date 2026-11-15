@@ -14,4 +14,14 @@ describe('PrismaUserRepository', () => {
     const { client } = createFakePrisma();
     expect(await new PrismaUserRepository(client).findById('nope')).toBeNull();
   });
+
+  it('findAll devuelve todos los usuarios como entidades de dominio', async () => {
+    const { client, users } = createFakePrisma();
+    users.push({ id: 'u1', name: 'Ana', email: 'a@x.com', role: 'HR', createdAt: new Date() });
+    users.push({ id: 'u2', name: 'Bo', email: 'b@x.com', role: 'EMPLOYEE', createdAt: new Date() });
+    expect(await new PrismaUserRepository(client).findAll()).toEqual([
+      { id: 'u1', name: 'Ana', email: 'a@x.com', role: 'HR' },
+      { id: 'u2', name: 'Bo', email: 'b@x.com', role: 'EMPLOYEE' },
+    ]);
+  });
 });

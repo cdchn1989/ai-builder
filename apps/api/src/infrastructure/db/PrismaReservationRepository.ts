@@ -17,6 +17,13 @@ export class PrismaReservationRepository implements ReservationRepository {
     return row ? toReservation(row) : null;
   }
 
+  async findConfirmedBetween(from: Date, to: Date): Promise<Reservation[]> {
+    const rows = await this.prisma.reservation.findMany({
+      where: { status: 'CONFIRMED', startTime: { gte: from, lt: to } },
+    });
+    return rows.map(toReservation);
+  }
+
   findOverlapping(roomId: string, start: Date, end: Date, excludeId?: string): Promise<Reservation[]> {
     return this.queryOverlapping(this.prisma, roomId, start, end, excludeId);
   }

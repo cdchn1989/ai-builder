@@ -10,4 +10,8 @@ export class PrismaUserRepository implements UserRepository {
     const row = await this.prisma.user.findUnique({ where: { id } });
     return row ? toUser(row) : null;
   }
+
+  async findAll(): Promise<User[]> {
+    return (await this.prisma.user.findMany()).map(toUser);
+  }
 }

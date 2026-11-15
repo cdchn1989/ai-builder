@@ -11,6 +11,10 @@ export class PrismaRoomRepository implements RoomRepository {
     return row ? toRoom(row) : null;
   }
 
+  async findAll(): Promise<Room[]> {
+    return (await this.prisma.room.findMany()).map(toRoom);
+  }
+
   async save(room: Room): Promise<void> {
     const { id, ...data } = room;
     await this.prisma.room.upsert({ where: { id }, update: data, create: room });

@@ -80,4 +80,15 @@ describe('PrismaReservationRepository', () => {
     client.$transaction.mockRejectedValueOnce(new Error('boom'));
     await expect(new PrismaReservationRepository(client).save(make())).rejects.toThrow('boom');
   });
+
+  it('findConfirmedBetween devuelve solo CONFIRMED con inicio en [from, to)', async () => {
+    const { client, reservations } = createFakePrisma();
+    reservations.push(make({ id: 'in', startTime: d(15), endTime: d(16) }));
+    reservations.push(make({ id: 'edge-from', startTime: d(10), endTime: d(11) }));
+    reservations.push(make({ id: 'edge-to', startTime: d(20), endTime: d(21) }));
+    reservations.push(make({ id: 'cancelled', status: 'CANCELLED' }));
+    const repo = new PrismaReservationRepository(client);
+    const ids = (await repo.findConfirmedBetween(d(10), d(20))).map((r) => r.id).sort();
+    expect(ids).toEqual(['edge-from', 'in']);
+  });
 });

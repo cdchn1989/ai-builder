@@ -21,4 +21,12 @@ describe('PrismaRoomRepository', () => {
     expect(rooms).toHaveLength(1);
     expect(rooms[0]).toMatchObject({ id: 'r1', isActive: false, capacity: 10 });
   });
+
+  it('findAll devuelve todas las salas como entidades de dominio', async () => {
+    const { client, rooms } = createFakePrisma();
+    rooms.push({ id: 'r1', name: 'A', capacity: 4, equipment: 'TV', isActive: true, createdAt: new Date() });
+    expect(await new PrismaRoomRepository(client).findAll()).toEqual([
+      { id: 'r1', name: 'A', capacity: 4, equipment: 'TV', isActive: true },
+    ]);
+  });
 });

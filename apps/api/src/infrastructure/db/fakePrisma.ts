@@ -6,9 +6,13 @@ export function createFakePrisma() {
   const rooms: any[] = [];
   const users: any[] = [];
   const client: any = {
-    user: { findUnique: vi.fn(async ({ where }: any) => users.find((u) => u.id === where.id) ?? null) },
+    user: {
+      findUnique: vi.fn(async ({ where }: any) => users.find((u) => u.id === where.id) ?? null),
+      findMany: vi.fn(async () => [...users]),
+    },
     room: {
       findUnique: vi.fn(async ({ where }: any) => rooms.find((r) => r.id === where.id) ?? null),
+      findMany: vi.fn(async () => [...rooms]),
       upsert: vi.fn(async ({ where, update, create }: any) => {
         const i = rooms.findIndex((r) => r.id === where.id);
         if (i >= 0) rooms[i] = { ...rooms[i], ...update };
@@ -18,8 +22,13 @@ export function createFakePrisma() {
     reservation: {
       findUnique: vi.fn(async ({ where }: any) => reservations.find((r) => r.id === where.id) ?? null),
       // where: { roomId, status, startTime: { lt: end }, endTime: { gt: start }, id?: { not } }
+      // o bien: { status, startTime: { gte, lt } } (listado por rango)
       findMany: vi.fn(async ({ where }: any) =>
-        reservations.filter(
+        where.roomId === undefined
+          ? reservations.filter(
+              (r) => r.status === where.status && r.startTime >= where.startTime.gte && r.startTime < where.startTime.lt,
+            )
+          : reservations.filter(
           (r) =>
             r.roomId === where.roomId &&
             r.status === where.status &&
